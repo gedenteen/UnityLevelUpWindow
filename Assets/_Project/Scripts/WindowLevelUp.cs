@@ -8,6 +8,7 @@ using Cysharp.Threading.Tasks;
 public class WindowLevelUp : MonoBehaviour
 {
     [SerializeField] private CanvasGroup _myCanvasGroup;
+    [SerializeField] private TextMeshProUGUI _textLevel;
     [SerializeField] private Button _buttonWatchAd;
     [SerializeField] private Button _buttonClaim;
 
@@ -23,32 +24,25 @@ public class WindowLevelUp : MonoBehaviour
         _buttonClaim.onClick.RemoveListener(CloseWindow);
     }
 
-    public void CloseWindow()
+    private void CloseWindow()
     {
-        Activate(false, 0.25f);
-    }
-    
-    public void OpenWindow()
-    {
-        Activate(true, 0.25f);
+        CloseWindowAsync().Forget();
     }
 
-    private void Activate(bool isActive, float seconds = 0f)
+    private async UniTask CloseWindowAsync()
     {
-        if (_myCanvasGroup != null)
-        {
-            ChangeAlpha(isActive, seconds).Forget();
-            _myCanvasGroup.interactable = isActive; // Устанавливаем интерактивность в зависимости от isActive
-            // _myCanvasGroup.blocksRaycasts = isActive; // Устанавливаем блокировку событий мыши в зависимости от isActive
-        }
-        else
-        {
-            Debug.LogError("UiPanel: CanvasGroup is not assigned or found on this GameObject.");
-        }
+        await Activate(false, 0.25f);
+        Destroy(gameObject);
     }
 
-    private async UniTask ChangeAlpha(bool isActive, float seconds)
+    private async UniTask Activate(bool isActive, float seconds)
     {
+        if (_myCanvasGroup == null)
+        {
+            Debug.LogError("WindowLevelUp: Activate: CanvasGroup is not assigned or found on this GameObject.");
+            return;
+        }
+        
         if (isActive) // если включаем, то включаем gameObject сразу
         {
             _myCanvasGroup.gameObject.SetActive(isActive);
@@ -82,7 +76,7 @@ public class WindowLevelUp : MonoBehaviour
     {
         if (seconds <= 0f)
         {
-            Debug.LogError($"SmoothChangeAlpha: invalid seconds = {seconds}");
+            Debug.LogError($"WindowLevelUp: SmoothChangeAlpha: invalid seconds = {seconds}");
             return;
         }
 
@@ -95,5 +89,15 @@ public class WindowLevelUp : MonoBehaviour
         }
 
         _myCanvasGroup.alpha = endAlpha;
+    }
+    
+    public void ShowWindow()
+    {
+        Activate(true, 0.25f).Forget();
+    }
+
+    public void SetLevel(uint level)
+    {
+        _textLevel.text = $"- LEVEL {level} -";
     }
 }
